@@ -6,7 +6,18 @@ const Footer = () => {
     const { profile } = useData();
     const currentYear = new Date().getFullYear();
 
-    const emailLink = `mailto:${profile.email}?subject=Hello%20from%20Portfolio&body=Hi%20${profile.name},%0A%0AI%20saw%20your%20portfolio%20and%20would%20like%20to%20connect.`;
+    // Extract username dari URL
+    const getGithubUsername = (url: string) => {
+        if (!url || url === '#') return 'GitHub';
+        const match = url.match(/github\.com\/([^/]+)/);
+        return match ? `@${match[1]}` : 'GitHub';
+    };
+
+    const getLinkedinUsername = (url: string) => {
+        if (!url || url === '#') return 'LinkedIn';
+        const match = url.match(/linkedin\.com\/in\/([^/]+)/);
+        return match ? match[1] : 'LinkedIn';
+    };
 
     return (
         <footer id="contact" className="py-16 md:py-24 bg-gray-950 border-t border-gray-900">
@@ -29,20 +40,21 @@ const Footer = () => {
                     Together.
                 </motion.h2>
 
-                {/* Social Icons */}
+                {/* Contact Links with Labels */}
                 <motion.div
-                    className="flex flex-wrap justify-center gap-4 md:gap-6 mb-12 md:mb-16"
+                    className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 md:gap-6 mb-12 md:mb-16"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.2 }}
                 >
-                    {/* Email - Direct anchor tag */}
+                    {/* Email */}
                     <a
-                        href={emailLink}
-                        className="p-3 md:p-4 rounded-full bg-gray-900 border border-gray-800 text-white hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:text-black hover:border-transparent transition-all duration-300 cursor-pointer"
+                        href={`mailto:${profile.email}`}
+                        className="flex items-center gap-3 px-5 py-3 rounded-full bg-gray-900 border border-gray-800 text-white hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:text-black hover:border-transparent transition-all duration-300 group"
                     >
-                        <Mail size={20} className="md:w-6 md:h-6" />
+                        <Mail size={20} className="flex-shrink-0" />
+                        <span className="text-sm md:text-base font-medium">{profile.email}</span>
                     </a>
 
                     {/* GitHub */}
@@ -50,9 +62,10 @@ const Footer = () => {
                         href={profile.github}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-3 md:p-4 rounded-full bg-gray-900 border border-gray-800 text-white hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:text-black hover:border-transparent transition-all duration-300 cursor-pointer"
+                        className="flex items-center gap-3 px-5 py-3 rounded-full bg-gray-900 border border-gray-800 text-white hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:text-black hover:border-transparent transition-all duration-300 group"
                     >
-                        <Github size={20} className="md:w-6 md:h-6" />
+                        <Github size={20} className="flex-shrink-0" />
+                        <span className="text-sm md:text-base font-medium">{getGithubUsername(profile.github)}</span>
                     </a>
 
                     {/* LinkedIn */}
@@ -60,9 +73,10 @@ const Footer = () => {
                         href={profile.linkedin}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-3 md:p-4 rounded-full bg-gray-900 border border-gray-800 text-white hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:text-black hover:border-transparent transition-all duration-300 cursor-pointer"
+                        className="flex items-center gap-3 px-5 py-3 rounded-full bg-gray-900 border border-gray-800 text-white hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:text-black hover:border-transparent transition-all duration-300 group"
                     >
-                        <Linkedin size={20} className="md:w-6 md:h-6" />
+                        <Linkedin size={20} className="flex-shrink-0" />
+                        <span className="text-sm md:text-base font-medium">{getLinkedinUsername(profile.linkedin)}</span>
                     </a>
                 </motion.div>
 

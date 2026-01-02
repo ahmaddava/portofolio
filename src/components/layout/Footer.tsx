@@ -50,7 +50,8 @@ const Footer = () => {
                 >
                     {/* Email */}
                     <a
-                        href={`mailto:${profile.email}`}
+                        href={`https://mail.google.com/mail/?view=cm&fs=1&to=${profile.email}`}
+                        target="_blank"
                         className="flex items-center gap-3 px-5 py-3 rounded-full bg-gray-900 border border-gray-800 text-white hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:text-black hover:border-transparent transition-all duration-300 group"
                     >
                         <Mail size={20} className="flex-shrink-0" />

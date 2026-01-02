@@ -81,11 +81,28 @@ const TechStackAdmin = () => {
         }
     };
 
-    const renderIcon = (icon: string) => {
-        if (icon.startsWith('http')) {
-            return <img src={icon} alt="" className="w-8 h-8 object-contain" />;
+    // Render icon - handles both emoji and image URL
+    const TechIcon = ({ icon, size = 'normal' }: { icon: string; size?: 'normal' | 'small' }) => {
+        const [imgError, setImgError] = useState(false);
+        const sizeClass = size === 'small' ? 'w-5 h-5' : 'w-8 h-8';
+
+        if (icon.startsWith('http') && !imgError) {
+            return (
+                <img
+                    src={icon}
+                    alt=""
+                    className={`${sizeClass} object-contain`}
+                    onError={() => setImgError(true)}
+                />
+            );
         }
-        return <span className="text-2xl">{icon}</span>;
+
+        // Fallback to emoji or first letter
+        if (icon.startsWith('http') && imgError) {
+            return <span className="text-lg">🔧</span>;
+        }
+
+        return <span className={size === 'small' ? 'text-lg' : 'text-2xl'}>{icon}</span>;
     };
 
     return (
@@ -112,11 +129,13 @@ const TechStackAdmin = () => {
                         key={item.id}
                         className="bg-gray-900 border border-gray-800 rounded-xl p-3 sm:p-4 flex items-center justify-between hover:border-gray-700 transition-colors group"
                     >
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            {renderIcon(item.icon)}
-                            <span className="text-sm sm:text-base text-white font-medium">{item.name}</span>
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <div className="flex-shrink-0">
+                                <TechIcon icon={item.icon} />
+                            </div>
+                            <span className="text-sm sm:text-base text-white font-medium truncate">{item.name}</span>
                         </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                             <button
                                 onClick={() => openModal(item)}
                                 className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"

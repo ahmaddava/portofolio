@@ -1,25 +1,32 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useData, type TechItem } from '../../context/DataContext';
-import { Plus, Pencil, Trash2, X, Save } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Save, Upload, Image, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 const TechStackAdmin = () => {
     const { techStack, addTechItem, updateTechItem, deleteTechItem } = useData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<TechItem | null>(null);
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState<Omit<TechItem, 'id'>>({
         name: '',
         icon: '',
         order_index: 0,
     });
+    const [iconType, setIconType] = useState<'emoji' | 'image'>('emoji');
 
     const openModal = (item?: TechItem) => {
         if (item) {
             setEditingItem(item);
             setFormData({ name: item.name, icon: item.icon, order_index: item.order_index });
+            // Detect if icon is URL or emoji
+            setIconType(item.icon.startsWith('http') ? 'image' : 'emoji');
         } else {
             setEditingItem(null);
             setFormData({ name: '', icon: '', order_index: techStack.length });
+            setIconType('emoji');
         }
         setIsModalOpen(true);
     };
@@ -27,6 +34,31 @@ const TechStackAdmin = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setEditingItem(null);
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `tech-${Date.now()}.${fileExt}`;
+            const filePath = `techstack/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('images')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage.from('images').getPublicUrl(filePath);
+            setFormData({ ...formData, icon: data.publicUrl });
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            alert('Error uploading image. Make sure you have created an "images" bucket in Supabase Storage.');
+        }
+        setUploading(false);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -47,6 +79,13 @@ const TechStackAdmin = () => {
         if (confirm('Are you sure you want to delete this item?')) {
             await deleteTechItem(id);
         }
+    };
+
+    const renderIcon = (icon: string) => {
+        if (icon.startsWith('http')) {
+            return <img src={icon} alt="" className="w-8 h-8 object-contain" />;
+        }
+        return <span className="text-2xl">{icon}</span>;
     };
 
     return (
@@ -74,7 +113,7 @@ const TechStackAdmin = () => {
                         className="bg-gray-900 border border-gray-800 rounded-xl p-3 sm:p-4 flex items-center justify-between hover:border-gray-700 transition-colors group"
                     >
                         <div className="flex items-center gap-2 sm:gap-3">
-                            <span className="text-xl sm:text-2xl">{item.icon}</span>
+                            {renderIcon(item.icon)}
                             <span className="text-sm sm:text-base text-white font-medium">{item.name}</span>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -125,18 +164,107 @@ const TechStackAdmin = () => {
                                     required
                                 />
                             </div>
+
+                            {/* Icon Type Selector */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Icon (Emoji)</label>
-                                <input
-                                    type="text"
-                                    value={formData.icon}
-                                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
-                                    placeholder="e.g., ⚛️"
-                                    required
-                                />
-                                <p className="text-gray-500 text-xs mt-1">Use an emoji or unicode character</p>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Icon Type</label>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIconType('emoji');
+                                            setFormData({ ...formData, icon: '' });
+                                        }}
+                                        className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${iconType === 'emoji'
+                                                ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+                                                : 'border-gray-700 text-gray-400 hover:border-gray-600'
+                                            }`}
+                                    >
+                                        Emoji
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIconType('image');
+                                            setFormData({ ...formData, icon: '' });
+                                        }}
+                                        className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${iconType === 'image'
+                                                ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+                                                : 'border-gray-700 text-gray-400 hover:border-gray-600'
+                                            }`}
+                                    >
+                                        Logo Image
+                                    </button>
+                                </div>
                             </div>
+
+                            {/* Emoji Input */}
+                            {iconType === 'emoji' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Emoji Icon</label>
+                                    <input
+                                        type="text"
+                                        value={formData.icon}
+                                        onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 text-2xl text-center"
+                                        placeholder="⚛️"
+                                        required
+                                    />
+                                    <p className="text-gray-500 text-xs mt-1">Paste an emoji character</p>
+                                </div>
+                            )}
+
+                            {/* Image Upload */}
+                            {iconType === 'image' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Logo Image</label>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                    />
+
+                                    {formData.icon ? (
+                                        <div className="relative group">
+                                            <div className="w-full h-32 bg-gray-800 rounded-lg flex items-center justify-center border border-gray-700">
+                                                <img
+                                                    src={formData.icon}
+                                                    alt="Logo preview"
+                                                    className="max-w-24 max-h-24 object-contain"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
+                                            >
+                                                <span className="text-white flex items-center gap-2 text-sm">
+                                                    <Upload size={18} /> Change Logo
+                                                </span>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={uploading}
+                                            className="w-full h-32 border-2 border-dashed border-gray-700 rounded-lg flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-cyan-500 hover:text-cyan-400 transition-colors"
+                                        >
+                                            {uploading ? (
+                                                <Loader2 className="animate-spin" size={24} />
+                                            ) : (
+                                                <>
+                                                    <Image size={28} />
+                                                    <span className="text-sm">Click to upload logo</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    )}
+                                    <p className="text-gray-500 text-xs mt-2">Recommended: PNG with transparent background, 64x64 or larger</p>
+                                </div>
+                            )}
 
                             <div className="flex justify-end gap-3 pt-4">
                                 <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-400 hover:text-white">
@@ -144,7 +272,7 @@ const TechStackAdmin = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={loading}
+                                    disabled={loading || !formData.icon}
                                     className="flex items-center gap-2 px-6 py-2 bg-cyan-500 text-black font-semibold rounded-lg hover:bg-cyan-400 transition-colors disabled:opacity-50"
                                 >
                                     <Save size={18} />

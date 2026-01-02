@@ -39,7 +39,19 @@ const MagneticButton: React.FC<Props> = ({ children, className = "", href }) => 
     );
 
     if (href) {
-        return <a href={href} target="_blank" rel="noopener noreferrer" className="inline-block">{Content}</a>;
+        // Check if it's a mailto or tel link - don't use target="_blank" for these
+        const isMailOrTel = href.startsWith('mailto:') || href.startsWith('tel:');
+
+        return (
+            <a
+                href={href}
+                target={isMailOrTel ? undefined : "_blank"}
+                rel={isMailOrTel ? undefined : "noopener noreferrer"}
+                className="inline-block"
+            >
+                {Content}
+            </a>
+        );
     }
 
     return Content;

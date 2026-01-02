@@ -1,15 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
 
 // Types
 export interface Project {
     id: number;
     title: string;
     description: string;
-    techStack: string[];
-    imageUrl: string;
-    videoUrl?: string;
-    demoLink: string;
-    repoLink: string;
+    tech_stack: string[];
+    image_url: string;
+    video_url?: string;
+    demo_link: string;
+    repo_link: string;
 }
 
 export interface Experience {
@@ -18,20 +19,23 @@ export interface Experience {
     role: string;
     period: string;
     description: string;
+    order_index: number;
 }
 
 export interface TechItem {
     id: number;
     name: string;
     icon: string;
+    order_index: number;
 }
 
 export interface ProfileData {
+    id?: number;
     name: string;
     role: string;
     tagline: string;
     description: string;
-    profileImage: string;
+    profile_image: string;
     email: string;
     github: string;
     linkedin: string;
@@ -40,104 +44,33 @@ export interface ProfileData {
 
 interface DataContextType {
     projects: Project[];
-    setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
     experiences: Experience[];
-    setExperiences: React.Dispatch<React.SetStateAction<Experience[]>>;
     techStack: TechItem[];
-    setTechStack: React.Dispatch<React.SetStateAction<TechItem[]>>;
     profile: ProfileData;
-    setProfile: React.Dispatch<React.SetStateAction<ProfileData>>;
+    loading: boolean;
+    refreshData: () => Promise<void>;
+    // CRUD methods
+    addProject: (project: Omit<Project, 'id'>) => Promise<void>;
+    updateProject: (id: number, project: Omit<Project, 'id'>) => Promise<void>;
+    deleteProject: (id: number) => Promise<void>;
+    addExperience: (exp: Omit<Experience, 'id'>) => Promise<void>;
+    updateExperience: (id: number, exp: Omit<Experience, 'id'>) => Promise<void>;
+    deleteExperience: (id: number) => Promise<void>;
+    addTechItem: (item: Omit<TechItem, 'id'>) => Promise<void>;
+    updateTechItem: (id: number, item: Omit<TechItem, 'id'>) => Promise<void>;
+    deleteTechItem: (id: number) => Promise<void>;
+    updateProfile: (profile: ProfileData) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Default data
-const defaultProjects: Project[] = [
-    {
-        id: 1,
-        title: "E-Commerce Dashboard",
-        description: "Interactive admin dashboard with real-time charts and data visualization.",
-        techStack: ["React", "TypeScript", "Tailwind", "Recharts"],
-        imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop",
-        videoUrl: "https://cdn.coverr.co/videos/coverr-working-on-a-monitor-4241/1080p.mp4",
-        demoLink: "#",
-        repoLink: "#",
-    },
-    {
-        id: 2,
-        title: "Social Media App",
-        description: "A full-featured social platform with real-time messaging and notifications.",
-        techStack: ["Next.js", "Prisma", "Socket.io"],
-        imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1000&auto=format&fit=crop",
-        videoUrl: "https://cdn.coverr.co/videos/coverr-coding-on-laptop-2-4245/1080p.mp4",
-        demoLink: "#",
-        repoLink: "#",
-    },
-    {
-        id: 3,
-        title: "Portfolio Website",
-        description: "Modern portfolio with advanced animations and glassmorphism design.",
-        techStack: ["React", "Framer Motion", "Tailwind"],
-        imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1000&auto=format&fit=crop",
-        demoLink: "#",
-        repoLink: "#",
-    },
-    {
-        id: 4,
-        title: "Task Management Tool",
-        description: "Kanban-style task manager for teams.",
-        techStack: ["Vue.js", "Vuex", "Firebase"],
-        imageUrl: "https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?q=80&w=1000&auto=format&fit=crop",
-        demoLink: "#",
-        repoLink: "#",
-    }
-];
-
-const defaultExperiences: Experience[] = [
-    {
-        id: 1,
-        company: "Tech Startups Inc.",
-        role: "Senior Frontend Developer",
-        period: "2023 - Present",
-        description: "Leading the frontend team in building scalable React applications."
-    },
-    {
-        id: 2,
-        company: "Digital Agency",
-        role: "Fullstack Developer",
-        period: "2021 - 2023",
-        description: "Developed custom e-commerce solutions using Next.js and Shopify."
-    },
-    {
-        id: 3,
-        company: "Freelance",
-        role: "Web Developer",
-        period: "2020 - 2021",
-        description: "Built portfolio websites and landing pages using React and Tailwind."
-    }
-];
-
-const defaultTechStack: TechItem[] = [
-    { id: 1, name: "React", icon: "⚛️" },
-    { id: 2, name: "TypeScript", icon: "🔷" },
-    { id: 3, name: "Next.js", icon: "▲" },
-    { id: 4, name: "Tailwind CSS", icon: "🎨" },
-    { id: 5, name: "Node.js", icon: "🟢" },
-    { id: 6, name: "PostgreSQL", icon: "🐘" },
-    { id: 7, name: "Framer Motion", icon: "🎬" },
-    { id: 8, name: "Docker", icon: "🐳" },
-    { id: 9, name: "AWS", icon: "☁️" },
-    { id: 10, name: "Git", icon: "🔀" },
-    { id: 11, name: "Prisma", icon: "💎" },
-    { id: 12, name: "Vite", icon: "⚡" },
-];
-
+// Default data for initial state
 const defaultProfile: ProfileData = {
     name: "Your Name",
     role: "Fullstack Developer",
     tagline: "Building Digital Experiences",
-    description: "I'm a Fullstack Developer specializing in building exceptional digital experiences. Currently focused on React, TypeScript, and Modern UI.",
-    profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop",
+    description: "I'm a Fullstack Developer specializing in building exceptional digital experiences.",
+    profile_image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop",
     email: "hello@example.com",
     github: "#",
     linkedin: "#",
@@ -145,49 +78,118 @@ const defaultProfile: ProfileData = {
 };
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [projects, setProjects] = useState<Project[]>(() => {
-        const saved = localStorage.getItem('portfolio_projects');
-        return saved ? JSON.parse(saved) : defaultProjects;
-    });
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [experiences, setExperiences] = useState<Experience[]>([]);
+    const [techStack, setTechStack] = useState<TechItem[]>([]);
+    const [profile, setProfile] = useState<ProfileData>(defaultProfile);
+    const [loading, setLoading] = useState(true);
 
-    const [experiences, setExperiences] = useState<Experience[]>(() => {
-        const saved = localStorage.getItem('portfolio_experiences');
-        return saved ? JSON.parse(saved) : defaultExperiences;
-    });
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // Fetch all data in parallel
+            const [projectsRes, experiencesRes, techStackRes, profileRes] = await Promise.all([
+                supabase.from('projects').select('*').order('id', { ascending: true }),
+                supabase.from('experiences').select('*').order('order_index', { ascending: true }),
+                supabase.from('techstack').select('*').order('order_index', { ascending: true }),
+                supabase.from('profiles').select('*').single(),
+            ]);
 
-    const [techStack, setTechStack] = useState<TechItem[]>(() => {
-        const saved = localStorage.getItem('portfolio_techstack');
-        return saved ? JSON.parse(saved) : defaultTechStack;
-    });
-
-    const [profile, setProfile] = useState<ProfileData>(() => {
-        const saved = localStorage.getItem('portfolio_profile');
-        return saved ? JSON.parse(saved) : defaultProfile;
-    });
-
-    // Persist to localStorage
-    useEffect(() => {
-        localStorage.setItem('portfolio_projects', JSON.stringify(projects));
-    }, [projects]);
-
-    useEffect(() => {
-        localStorage.setItem('portfolio_experiences', JSON.stringify(experiences));
-    }, [experiences]);
+            if (projectsRes.data) setProjects(projectsRes.data);
+            if (experiencesRes.data) setExperiences(experiencesRes.data);
+            if (techStackRes.data) setTechStack(techStackRes.data);
+            if (profileRes.data) setProfile(profileRes.data);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
-        localStorage.setItem('portfolio_techstack', JSON.stringify(techStack));
-    }, [techStack]);
+        fetchData();
+    }, []);
 
-    useEffect(() => {
-        localStorage.setItem('portfolio_profile', JSON.stringify(profile));
-    }, [profile]);
+    const refreshData = async () => {
+        await fetchData();
+    };
+
+    // Projects CRUD
+    const addProject = async (project: Omit<Project, 'id'>) => {
+        const { error } = await supabase.from('projects').insert([project]);
+        if (!error) await refreshData();
+    };
+
+    const updateProject = async (id: number, project: Omit<Project, 'id'>) => {
+        const { error } = await supabase.from('projects').update(project).eq('id', id);
+        if (!error) await refreshData();
+    };
+
+    const deleteProject = async (id: number) => {
+        const { error } = await supabase.from('projects').delete().eq('id', id);
+        if (!error) await refreshData();
+    };
+
+    // Experiences CRUD
+    const addExperience = async (exp: Omit<Experience, 'id'>) => {
+        const { error } = await supabase.from('experiences').insert([exp]);
+        if (!error) await refreshData();
+    };
+
+    const updateExperience = async (id: number, exp: Omit<Experience, 'id'>) => {
+        const { error } = await supabase.from('experiences').update(exp).eq('id', id);
+        if (!error) await refreshData();
+    };
+
+    const deleteExperience = async (id: number) => {
+        const { error } = await supabase.from('experiences').delete().eq('id', id);
+        if (!error) await refreshData();
+    };
+
+    // TechStack CRUD
+    const addTechItem = async (item: Omit<TechItem, 'id'>) => {
+        const { error } = await supabase.from('techstack').insert([item]);
+        if (!error) await refreshData();
+    };
+
+    const updateTechItem = async (id: number, item: Omit<TechItem, 'id'>) => {
+        const { error } = await supabase.from('techstack').update(item).eq('id', id);
+        if (!error) await refreshData();
+    };
+
+    const deleteTechItem = async (id: number) => {
+        const { error } = await supabase.from('techstack').delete().eq('id', id);
+        if (!error) await refreshData();
+    };
+
+    // Profile update
+    const updateProfile = async (newProfile: ProfileData) => {
+        if (profile.id) {
+            const { error } = await supabase.from('profiles').update(newProfile).eq('id', profile.id);
+            if (!error) await refreshData();
+        } else {
+            const { error } = await supabase.from('profiles').insert([newProfile]);
+            if (!error) await refreshData();
+        }
+    };
 
     return (
         <DataContext.Provider value={{
-            projects, setProjects,
-            experiences, setExperiences,
-            techStack, setTechStack,
-            profile, setProfile,
+            projects,
+            experiences,
+            techStack,
+            profile,
+            loading,
+            refreshData,
+            addProject,
+            updateProject,
+            deleteProject,
+            addExperience,
+            updateExperience,
+            deleteExperience,
+            addTechItem,
+            updateTechItem,
+            deleteTechItem,
+            updateProfile,
         }}>
             {children}
         </DataContext.Provider>

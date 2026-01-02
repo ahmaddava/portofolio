@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, FolderKanban, User, Wrench, ArrowLeft, Menu, X } from 'lucide-react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, FolderKanban, User, Wrench, ArrowLeft, Menu, X, LogOut } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const { signOut, user } = useAuth();
+    const navigate = useNavigate();
 
     const navItems = [
         { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
@@ -15,13 +18,18 @@ const AdminLayout = () => {
 
     const closeSidebar = () => setIsSidebarOpen(false);
 
+    const handleLogout = async () => {
+        await signOut();
+        navigate('/admin/login');
+    };
+
     return (
-        <div className="min-h-screen bg-gray-950 flex relative">
+        <div className="h-screen bg-gray-950 flex overflow-hidden">
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
                 <div>
                     <h1 className="text-lg font-bold text-white">Admin Panel</h1>
-                    <p className="text-gray-500 text-xs">Manage portfolio</p>
+                    <p className="text-gray-500 text-xs">{user?.email}</p>
                 </div>
                 <button
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -31,11 +39,11 @@ const AdminLayout = () => {
                 </button>
             </div>
 
-            {/* Sidebar - Desktop */}
-            <aside className="hidden lg:flex w-64 bg-gray-900 border-r border-gray-800 p-4 flex-col">
+            {/* Sidebar - Desktop (Fixed) */}
+            <aside className="hidden lg:flex w-64 bg-gray-900 border-r border-gray-800 p-4 flex-col flex-shrink-0">
                 <div className="mb-8">
                     <h1 className="text-xl font-bold text-white">Admin Panel</h1>
-                    <p className="text-gray-500 text-sm">Manage your portfolio</p>
+                    <p className="text-gray-500 text-sm truncate">{user?.email}</p>
                 </div>
 
                 <nav className="flex-1 space-y-2">
@@ -57,13 +65,22 @@ const AdminLayout = () => {
                     ))}
                 </nav>
 
-                <a
-                    href="/"
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors mt-4"
-                >
-                    <ArrowLeft size={20} />
-                    <span>Back to Site</span>
-                </a>
+                <div className="space-y-2 mt-4">
+                    <a
+                        href="/"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                    >
+                        <ArrowLeft size={20} />
+                        <span>Back to Site</span>
+                    </a>
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                    >
+                        <LogOut size={20} />
+                        <span>Logout</span>
+                    </button>
+                </div>
             </aside>
 
             {/* Sidebar - Mobile (Overlay) */}
@@ -90,7 +107,7 @@ const AdminLayout = () => {
                             <div className="mb-8 flex items-center justify-between">
                                 <div>
                                     <h1 className="text-xl font-bold text-white">Admin Panel</h1>
-                                    <p className="text-gray-500 text-sm">Manage your portfolio</p>
+                                    <p className="text-gray-500 text-sm truncate">{user?.email}</p>
                                 </div>
                                 <button
                                     onClick={closeSidebar}
@@ -120,21 +137,30 @@ const AdminLayout = () => {
                                 ))}
                             </nav>
 
-                            <a
-                                href="/"
-                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors mt-4"
-                            >
-                                <ArrowLeft size={20} />
-                                <span>Back to Site</span>
-                            </a>
+                            <div className="space-y-2 mt-4">
+                                <a
+                                    href="/"
+                                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                                >
+                                    <ArrowLeft size={20} />
+                                    <span>Back to Site</span>
+                                </a>
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                                >
+                                    <LogOut size={20} />
+                                    <span>Logout</span>
+                                </button>
+                            </div>
                         </motion.aside>
                     </>
                 )}
             </AnimatePresence>
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-auto pt-16 lg:pt-0">
-                <div className="p-4 sm:p-6 md:p-8">
+            {/* Main Content (Scrollable) */}
+            <main className="flex-1 overflow-y-auto pt-16 lg:pt-0">
+                <div className="p-4 sm:p-6 md:p-8 min-h-full">
                     <Outlet />
                 </div>
             </main>

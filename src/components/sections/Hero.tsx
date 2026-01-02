@@ -3,7 +3,15 @@ import { useData } from '../../context/DataContext';
 import SplitText from '../ui/SplitText';
 
 const Hero = () => {
-    const { profile } = useData();
+    const { profile, loading } = useData();
+
+    if (loading) {
+        return (
+            <section className="min-h-screen flex items-center justify-center bg-gray-950">
+                <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+            </section>
+        );
+    }
 
     return (
         <section id="home" className="relative min-h-screen flex flex-col justify-center items-center overflow-hidden bg-gray-950 px-4">
@@ -30,12 +38,12 @@ const Hero = () => {
                 {/* SplitText Animation for Tagline */}
                 <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white mb-6">
                     <SplitText
-                        text={profile.tagline.split(' ').slice(0, 2).join(' ')}
+                        text={profile.tagline?.split(' ').slice(0, 2).join(' ') || 'Building Digital'}
                         className="justify-center"
                         delay={40}
                     />
                     <SplitText
-                        text={profile.tagline.split(' ').slice(2).join(' ')}
+                        text={profile.tagline?.split(' ').slice(2).join(' ') || 'Experiences'}
                         className="justify-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500"
                         delay={40}
                     />

@@ -42,16 +42,16 @@ const ProjectCard: React.FC<Props> = ({ project, className = "" }) => {
                 <div className="relative h-48 sm:h-56 md:h-64 w-full bg-gray-900 overflow-hidden">
                     {/* Static Image */}
                     <img
-                        src={project.imageUrl}
+                        src={project.image_url}
                         alt={project.title}
-                        className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${isHovered && project.videoUrl ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}
+                        className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${isHovered && project.video_url ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}
                     />
 
                     {/* Video (Shows on hover) */}
-                    {project.videoUrl && (
+                    {project.video_url && (
                         <video
                             ref={videoRef}
-                            src={project.videoUrl}
+                            src={project.video_url}
                             muted
                             loop
                             playsInline
@@ -74,23 +74,23 @@ const ProjectCard: React.FC<Props> = ({ project, className = "" }) => {
                     </p>
 
                     <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4 transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 delay-75">
-                        {project.techStack.slice(0, 3).map((tech) => (
+                        {project.tech_stack?.slice(0, 3).map((tech) => (
                             <span key={tech} className="text-[10px] md:text-xs font-medium bg-gray-800/80 backdrop-blur-sm text-cyan-300 px-2 py-1 rounded">
                                 {tech}
                             </span>
                         ))}
-                        {project.techStack.length > 3 && (
+                        {project.tech_stack && project.tech_stack.length > 3 && (
                             <span className="text-[10px] md:text-xs font-medium bg-gray-800/80 backdrop-blur-sm text-gray-400 px-2 py-1 rounded">
-                                +{project.techStack.length - 3}
+                                +{project.tech_stack.length - 3}
                             </span>
                         )}
                     </div>
 
                     <div className="flex gap-3 md:gap-4 transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 delay-100">
-                        <a href={project.demoLink} className="flex items-center gap-1 text-xs md:text-sm font-semibold text-white hover:text-cyan-400 transition-colors">
+                        <a href={project.demo_link} className="flex items-center gap-1 text-xs md:text-sm font-semibold text-white hover:text-cyan-400 transition-colors">
                             <ExternalLink size={14} /> <span className="hidden sm:inline">Live</span> Demo
                         </a>
-                        <a href={project.repoLink} className="flex items-center gap-1 text-xs md:text-sm font-semibold text-gray-400 hover:text-white transition-colors">
+                        <a href={project.repo_link} className="flex items-center gap-1 text-xs md:text-sm font-semibold text-gray-400 hover:text-white transition-colors">
                             <Github size={14} /> Source
                         </a>
                     </div>

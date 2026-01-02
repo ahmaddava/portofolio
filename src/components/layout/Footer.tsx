@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useData } from '../../context/DataContext';
 import MagneticButton from '../ui/MagneticButton';
-import { Github, Linkedin, Mail, Twitter } from 'lucide-react';
+import { Github, Linkedin, Mail } from 'lucide-react';
 
 const Footer = () => {
     const { profile } = useData();
@@ -43,9 +43,6 @@ const Footer = () => {
                     </MagneticButton>
                     <MagneticButton href={profile.linkedin} className="p-3 md:p-4 rounded-full bg-gray-900 text-white hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:text-black transition-all duration-300">
                         <Linkedin size={20} className="md:w-6 md:h-6" />
-                    </MagneticButton>
-                    <MagneticButton href={profile.twitter} className="p-3 md:p-4 rounded-full bg-gray-900 text-white hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:text-black transition-all duration-300">
-                        <Twitter size={20} className="md:w-6 md:h-6" />
                     </MagneticButton>
                 </motion.div>
 

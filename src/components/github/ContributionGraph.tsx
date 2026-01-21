@@ -24,16 +24,59 @@ const ContributionGraph = () => {
     const [activityType, setActivityType] = useState('all');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // Generate mock data as fallback
+    const generateMockData = (): ContributionData => {
+        const contributions: ContributionDay[] = [];
+        const today = new Date();
+        let total = 0;
+
+        for (let i = 364; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+
+            const random = Math.random();
+            let count = 0;
+            let level = 0;
+
+            if (random > 0.3) {
+                count = Math.floor(Math.random() * 15) + 1;
+                if (count <= 3) level = 1;
+                else if (count <= 6) level = 2;
+                else if (count <= 10) level = 3;
+                else level = 4;
+            }
+
+            total += count;
+            contributions.push({
+                date: date.toISOString().split('T')[0],
+                count,
+                level
+            });
+        }
+
+        return { total: { lastYear: total }, contributions };
+    };
+
     useEffect(() => {
         const fetchContributions = async () => {
             try {
                 const response = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`);
                 if (response.ok) {
                     const result = await response.json();
-                    setData(result);
+                    if (result.contributions && result.contributions.length > 0) {
+                        setData(result);
+                    } else {
+                        // Fallback to mock data if API returns empty
+                        setData(generateMockData());
+                    }
+                } else {
+                    // Fallback to mock data on error
+                    setData(generateMockData());
                 }
             } catch (error) {
                 console.error('Error fetching contributions:', error);
+                // Fallback to mock data on error
+                setData(generateMockData());
             }
             setLoading(false);
         };
@@ -52,7 +95,6 @@ const ContributionGraph = () => {
     }, []);
 
     const getColorClass = (level: number) => {
-        // Theme-aware colors
         if (theme === 'dark') {
             const colors = [
                 'bg-[#161b22]',

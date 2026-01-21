@@ -4,21 +4,31 @@ import { fetchGithubActivity, formatEventMessage } from '../../services/GithubSe
 import { GitCommit, GitBranch, Star, GitFork, MessageCircle, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
+// Hardcoded fallback username
+const FALLBACK_USERNAME = 'ahmaddava';
+
 const ActivityFeed = () => {
-    const { profile } = useData();
+    const { profile, loading: profileLoading } = useData();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [events, setEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (profileLoading) return;
+
         const loadActivity = async () => {
-            const username = profile.github?.split('/').pop() || 'ahmaddava';
-            const data = await fetchGithubActivity(username);
+            setLoading(true);
+            // Use fallback username if profile not loaded
+            const targetUsername = profile.github && profile.github !== '#'
+                ? profile.github.split('/').pop()
+                : FALLBACK_USERNAME;
+
+            const data = await fetchGithubActivity(targetUsername || FALLBACK_USERNAME);
             setEvents(data.slice(0, 5));
             setLoading(false);
         };
         loadActivity();
-    }, [profile.github]);
+    }, [profile.github, profileLoading]);
 
     const getEventIcon = (type: string) => {
         switch (type) {
@@ -31,7 +41,7 @@ const ActivityFeed = () => {
         }
     };
 
-    if (loading) {
+    if (loading || profileLoading) {
         return (
             <div className="space-y-3">
                 {[1, 2, 3].map((i) => (

@@ -14,75 +14,49 @@ interface ContributionData {
     contributions: ContributionDay[];
 }
 
+// Hardcoded fallback username in case Supabase fails
+const FALLBACK_USERNAME = 'ahmaddava';
+
 const ContributionGraph = () => {
-    const { profile } = useData();
+    const { profile, loading: profileLoading } = useData();
     const { theme } = useTheme();
-    const username = profile.github?.split('/').pop() || 'ahmaddava';
+
+    // Get username from profile, or use fallback
+    const username = profile.github?.split('/').pop() || FALLBACK_USERNAME;
+
     const [data, setData] = useState<ContributionData | null>(null);
     const [loading, setLoading] = useState(true);
     const [showSettings, setShowSettings] = useState(false);
     const [activityType, setActivityType] = useState('all');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Generate mock data as fallback
-    const generateMockData = (): ContributionData => {
-        const contributions: ContributionDay[] = [];
-        const today = new Date();
-        let total = 0;
-
-        for (let i = 364; i >= 0; i--) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
-
-            const random = Math.random();
-            let count = 0;
-            let level = 0;
-
-            if (random > 0.3) {
-                count = Math.floor(Math.random() * 15) + 1;
-                if (count <= 3) level = 1;
-                else if (count <= 6) level = 2;
-                else if (count <= 10) level = 3;
-                else level = 4;
-            }
-
-            total += count;
-            contributions.push({
-                date: date.toISOString().split('T')[0],
-                count,
-                level
-            });
-        }
-
-        return { total: { lastYear: total }, contributions };
-    };
-
     useEffect(() => {
+        // Wait for profile to load before fetching
+        if (profileLoading) return;
+
         const fetchContributions = async () => {
+            setLoading(true);
             try {
-                const response = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`);
+                // Use FALLBACK_USERNAME if profile github is not set properly
+                const targetUsername = profile.github && profile.github !== '#'
+                    ? profile.github.split('/').pop()
+                    : FALLBACK_USERNAME;
+
+                const response = await fetch(`https://github-contributions-api.jogruber.de/v4/${targetUsername}?y=last`);
                 if (response.ok) {
                     const result = await response.json();
                     if (result.contributions && result.contributions.length > 0) {
                         setData(result);
-                    } else {
-                        // Fallback to mock data if API returns empty
-                        setData(generateMockData());
                     }
-                } else {
-                    // Fallback to mock data on error
-                    setData(generateMockData());
                 }
             } catch (error) {
                 console.error('Error fetching contributions:', error);
-                // Fallback to mock data on error
-                setData(generateMockData());
             }
             setLoading(false);
         };
 
         fetchContributions();
-    }, [username]);
+    }, [profile.github, profileLoading]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -154,10 +128,13 @@ const ContributionGraph = () => {
         { id: 'reviews', label: 'Code review', description: 'Shows code reviews' },
     ];
 
-    if (loading) {
+    if (loading || profileLoading) {
         return (
             <div className="rounded-lg border border-border-default bg-canvas-default p-4">
-                <div className="animate-pulse h-32 bg-canvas-subtle rounded"></div>
+                <div className="animate-pulse space-y-3">
+                    <div className="h-4 bg-canvas-subtle rounded w-1/3"></div>
+                    <div className="h-24 bg-canvas-subtle rounded"></div>
+                </div>
             </div>
         );
     }

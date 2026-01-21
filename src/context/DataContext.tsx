@@ -64,15 +64,15 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Default data for initial state
+// Default data for initial state - Use real data as fallback
 const defaultProfile: ProfileData = {
-    name: "Your Name",
+    name: "Ahmad Dava",
     role: "Fullstack Developer",
     tagline: "Building Digital Experiences",
     description: "I'm a Fullstack Developer specializing in building exceptional digital experiences.",
-    profile_image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop",
-    email: "hello@example.com",
-    github: "#",
+    profile_image: "https://avatars.githubusercontent.com/u/ahmaddava",
+    email: "ahmaddava3@gmail.com",
+    github: "https://github.com/ahmaddava",
     linkedin: "#",
     twitter: "#",
 };

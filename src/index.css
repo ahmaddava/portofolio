@@ -10,14 +10,38 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #030712;
+  color-scheme: light dark;
+
+  /* GitHub Light Theme Variables */
+  --color-canvas-default: #ffffff;
+  --color-canvas-subtle: #f6f8fa;
+  --color-canvas-overlay: #ffffff;
+  --color-fg-default: #1f2328;
+  --color-fg-muted: #656d76;
+  --color-fg-subtle: #6e7781;
+  --color-fg-accent: #0969da;
+  --color-border-default: #d0d7de;
+  --color-border-muted: #d8dee4;
+  --color-neutral-emphasis: #6e7781;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.dark {
+  /* GitHub Dark Theme Variables */
+  --color-canvas-default: #0d1117;
+  --color-canvas-subtle: #161b22;
+  --color-canvas-overlay: #161b22;
+  --color-fg-default: #e6edf3;
+  --color-fg-muted: #7d8590;
+  --color-fg-subtle: #6e7781;
+  --color-fg-accent: #2f81f7;
+  --color-border-default: #30363d;
+  --color-border-muted: #21262d;
+  --color-neutral-emphasis: #6e7781;
 }
 
 * {
@@ -32,7 +56,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  @apply bg-gray-950 text-white;
+  background-color: var(--color-canvas-default);
+  color: var(--color-fg-default);
 }
 
 #root {
@@ -45,11 +70,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-950;
+  background-color: var(--color-canvas-default);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-700 hover:bg-gray-600 rounded-full;
+  background-color: var(--color-border-default);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-fg-muted);
 }
 
 /* Selection Color */
